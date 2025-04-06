@@ -1,0 +1,117 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "noResults": "No results found"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember me",
+    "loginButton": "Sign In",
+    "registerButton": "Register",
+    "invalidCredentials": "Invalid email or password",
+    "setup2FA": "Set Up Two-Factor Authentication",
+    "verify2FA": "Verify Two-Factor Authentication",
+    "setup2FADescription": "Scan the QR code with your authenticator app or enter the backup code manually.",
+    "scanQRCode": "Scan this QR code with your authenticator app",
+    "backupCode": "Backup Code",
+    "enterVerificationCode": "Enter the verification code from your authenticator app",
+    "verificationCode": "Verification Code",
+    "enable2FA": "Enable 2FA",
+    "disable2FA": "Disable 2FA",
+    "verify": "Verify",
+    "invalidCode": "Invalid verification code",
+    "verificationError": "Error verifying code",
+    "disableError": "Error disabling 2FA",
+    "2faEnabled": "Two-factor authentication enabled successfully",
+    "2faDisabled": "Two-factor authentication disabled successfully",
+    "2faVerified": "Two-factor authentication verified successfully",
+    "2faEnableError": "Failed to enable two-factor authentication",
+    "2faDisableError": "Failed to disable two-factor authentication",
+    "2faVerificationError": "Failed to verify two-factor authentication"
+  },
+  "queue": {
+    "title": "Queue Management",
+    "roomNumber": "Room Number",
+    "currentQueue": "Current Queue",
+    "estimatedWaitTime": "Estimated Wait Time",
+    "totalVoters": "Total Voters",
+    "processedVoters": "Processed Voters",
+    "updateQueue": "Update Queue",
+    "refresh": "Refresh",
+    "noQueues": "No active queues"
+  },
+  "voter": {
+    "title": "Voter Management",
+    "search": "Search Voters",
+    "voterId": "Voter ID",
+    "name": "Name",
+    "status": "Status",
+    "registrationDate": "Registration Date",
+    "verificationMethod": "Verification Method",
+    "verify": "Verify Voter",
+    "generateQR": "Generate QR Code",
+    "scanQR": "Scan QR Code"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Overview",
+    "statistics": "Statistics",
+    "recentActivity": "Recent Activity",
+    "queueStats": "Queue Statistics",
+    "voterStats": "Voter Statistics"
+  },
+  "settings": {
+    "title": "User Settings",
+    "account": "Account Information",
+    "email": "Email Address",
+    "role": "Role",
+    "roles": {
+      "admin": "Administrator",
+      "staff": "Staff Member",
+      "voter": "Voter"
+    },
+    "security": "Security Settings",
+    "twoFactorAuth": "Two-Factor Authentication",
+    "twoFactorAuthDescription": "Add an extra layer of security to your account",
+    "changePassword": "Change Password",
+    "changePasswordDescription": "Update your account password",
+    "change": "Change",
+    "preferences": "Preferences",
+    "darkMode": "Dark Mode",
+    "darkModeDescription": "Toggle dark/light theme",
+    "language": "Language",
+    "languageDescription": "Change the application language"
+  },
+  "notifications": {
+    "queueUpdate": "Queue updated",
+    "voterVerified": "Voter verified successfully",
+    "error": "An error occurred",
+    "connectionLost": "Connection lost",
+    "connectionRestored": "Connection restored"
+  },
+  "app": {
+    "name": "Voting System",
+    "title": "Voting System"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "queue": "Queue Management",
+    "verify": "Voter Verification",
+    "qrGenerate": "Generate QR Code",
+    "qrScan": "Scan QR Code",
+    "settings": "Settings"
+  }
+} 

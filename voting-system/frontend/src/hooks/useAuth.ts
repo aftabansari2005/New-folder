@@ -1,73 +1,158 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useNotification } from '../components/NotificationSystem';
 
 interface User {
-  id: string;
-  name: string;
+  id: number;
   email: string;
-  role: 'voter' | 'admin';
+  role: string;
 }
 
 interface AuthState {
-  isAuthenticated: boolean;
   user: User | null;
-  loading: boolean;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
-    isAuthenticated: false,
     user: null,
-    loading: true,
+    token: null,
+    isAuthenticated: false,
+    isLoading: true,
   });
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { showNotification } = useNotification();
 
   useEffect(() => {
-    checkAuthStatus();
+    const initializeAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          // Verify token validity with backend
+          const response = await fetch('/api/auth/verify', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            setAuthState({
+              user: userData,
+              token,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          } else {
+            // Token is invalid or expired
+            localStorage.removeItem('token');
+            setAuthState({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
+          }
+        } else {
+          setAuthState({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setAuthState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      }
+    };
+
+    initializeAuth();
   }, []);
 
-  const checkAuthStatus = async () => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setAuthState({ isAuthenticated: false, user: null, loading: false });
-        return;
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error(t('auth.invalidCredentials'));
       }
 
-      const response = await axios.get('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setAuthState({
-        isAuthenticated: true,
-        user: response.data,
-        loading: false,
-      });
-    } catch (error) {
-      localStorage.removeItem('token');
-      setAuthState({ isAuthenticated: false, user: null, loading: false });
-    }
-  };
-
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await axios.post('/api/auth/login', { email, password });
-      const { token, user } = response.data;
+      const { token, user } = await response.json();
       localStorage.setItem('token', token);
-      setAuthState({ isAuthenticated: true, user, loading: false });
-      return true;
+      setAuthState({
+        user,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+      showNotification(t('auth.loginSuccess'), 'success');
+      navigate('/');
     } catch (error) {
-      return false;
+      console.error('Login error:', error);
+      showNotification(error instanceof Error ? error.message : t('common.error'), 'error');
+      throw error;
     }
-  };
+  }, [navigate, t, showNotification]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
-    setAuthState({ isAuthenticated: false, user: null, loading: false });
-  };
+    setAuthState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+    showNotification(t('auth.logoutSuccess'), 'success');
+    navigate('/login');
+  }, [navigate, t, showNotification]);
+
+  const refreshToken = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('/api/auth/refresh', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const { token: newToken } = await response.json();
+        localStorage.setItem('token', newToken);
+        setAuthState((prev) => ({
+          ...prev,
+          token: newToken,
+        }));
+      } else {
+        logout();
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      logout();
+    }
+  }, [logout]);
 
   return {
     ...authState,
     login,
     logout,
+    refreshToken,
   };
 }; 

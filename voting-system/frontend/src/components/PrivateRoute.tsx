@@ -3,10 +3,10 @@ import { Navigate } from 'react-router-dom';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
-  adminOnly?: boolean;
+  roles?: string[];
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, adminOnly = false }) => {
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, roles }) => {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
@@ -14,7 +14,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, adminOnly = false
     return <Navigate to="/login" />;
   }
 
-  if (adminOnly && user.role !== 'admin') {
+  if (roles && !roles.includes(user.role)) {
     return <Navigate to="/" />;
   }
 

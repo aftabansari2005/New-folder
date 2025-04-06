@@ -11,10 +11,9 @@ import {
   useTheme,
 } from '@mui/material';
 import {
+  QrCodeScanner as QrCodeScannerIcon,
+  Face as FaceIcon,
   Queue as QueueIcon,
-  VerifiedUser as VerifiedUserIcon,
-  People as PeopleIcon,
-  Timer as TimerIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -45,45 +44,24 @@ const Dashboard = () => {
   const theme = useTheme();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  const stats = [
+  const adminActions = [
     {
-      title: 'Active Queues',
-      value: '3',
-      icon: <QueueIcon />,
-      color: theme.palette.primary.main,
+      title: 'QR Code Scanner',
+      description: 'Scan and verify voter QR codes',
+      icon: <QrCodeScannerIcon />,
+      path: '/admin/qr-scan',
     },
     {
-      title: 'Voters Verified Today',
-      value: '156',
-      icon: <VerifiedUserIcon />,
-      color: theme.palette.success.main,
+      title: 'Face Recognition',
+      description: 'Verify voters using facial recognition',
+      icon: <FaceIcon />,
+      path: '/admin/face-verify',
     },
-    {
-      title: 'Total Voters',
-      value: '1,234',
-      icon: <PeopleIcon />,
-      color: theme.palette.info.main,
-    },
-    {
-      title: 'Average Wait Time',
-      value: '15 min',
-      icon: <TimerIcon />,
-      color: theme.palette.warning.main,
-    },
-  ];
-
-  const quickActions = [
     {
       title: 'Queue Management',
-      description: 'Monitor and update queue status for different rooms',
+      description: 'Manage and update queue status',
       icon: <QueueIcon />,
-      path: '/queues',
-    },
-    {
-      title: 'Voter Verification',
-      description: 'Verify voters using facial recognition',
-      icon: <VerifiedUserIcon />,
-      path: '/verify',
+      path: '/admin/queues',
     },
   ];
 
@@ -91,46 +69,16 @@ const Dashboard = () => {
     <Box>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Welcome, {user.email}
+          Admin Dashboard
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Here's an overview of the voting system
+          Manage voter verification and queue status
         </Typography>
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {stats.map((stat) => (
-          <Grid item xs={12} sm={6} md={3} key={stat.title}>
-            <Paper
-              sx={{
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                height: '100%',
-              }}
-            >
-              <IconWrapper sx={{ backgroundColor: stat.color }}>
-                {stat.icon}
-              </IconWrapper>
-              <Typography variant="h4" component="div" gutterBottom>
-                {stat.value}
-              </Typography>
-              <Typography color="text.secondary" align="center">
-                {stat.title}
-              </Typography>
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
-
-      <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-        Quick Actions
-      </Typography>
-
       <Grid container spacing={3}>
-        {quickActions.map((action) => (
-          <Grid item xs={12} md={6} key={action.title}>
+        {adminActions.map((action) => (
+          <Grid item xs={12} md={4} key={action.title}>
             <StyledCard>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

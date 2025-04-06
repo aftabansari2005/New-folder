@@ -1,213 +1,181 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Container,
-  Typography,
   Box,
-  Paper,
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  TextField,
   Button,
-  Stepper,
-  Step,
-  StepLabel,
-  CircularProgress,
-  Alert,
+  Paper,
+  Tabs,
+  Tab,
 } from '@mui/material';
-import QrReader from 'qrcode.react';
-import * as faceapi from 'face-api.js';
+import { useTranslation } from 'react-i18next';
+import { useNotification } from '../components/NotificationSystem';
+import Webcam from 'react-webcam';
 
-interface VerificationStep {
-  label: string;
-  description: string;
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
 }
 
-const steps: VerificationStep[] = [
-  {
-    label: 'Scan QR Code',
-    description: 'Please scan your voter ID QR code',
-  },
-  {
-    label: 'Facial Recognition',
-    description: 'Please look at the camera for verification',
-  },
-  {
-    label: 'Verification Complete',
-    description: 'Your identity has been verified',
-  },
-];
+const TabPanel = (props: TabPanelProps) => {
+  const { children, value, index, ...other } = props;
 
-const VoterVerification = () => {
-  const [activeStep, setActiveStep] = useState(0);
-  const [qrData, setQrData] = useState<string | null>(null);
-  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'error'>('pending');
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`verification-tabpanel-${index}`}
+      aria-labelledby={`verification-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+};
 
-  useEffect(() => {
-    // Load face-api models
-    const loadModels = async () => {
-      try {
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-          faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
-        ]);
-      } catch (error) {
-        console.error('Error loading face-api models:', error);
-        setErrorMessage('Failed to load facial recognition models');
-        setVerificationStatus('error');
-      }
-    };
+const VoterVerification: React.FC = () => {
+  const { t } = useTranslation();
+  const { showNotification } = useNotification();
+  const [tabValue, setTabValue] = useState(0);
+  const [voterId, setVoterId] = useState('');
+  const [qrData, setQrData] = useState('');
+  const webcamRef = React.useRef<Webcam>(null);
 
-    loadModels();
-  }, []);
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
 
-  const handleQRScan = (data: string) => {
+  const handleQRVerification = async () => {
     try {
-      // Validate QR code data
-      const voterData = JSON.parse(data);
-      if (!voterData.voterId || !voterData.roomNumber) {
-        throw new Error('Invalid QR code data');
+      const response = await fetch('/api/qr/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ qrData }),
+      });
+
+      if (!response.ok) {
+        throw new Error('QR verification failed');
       }
-      setQrData(data);
-      setActiveStep(1);
-      setVerificationStatus('pending');
+
+      showNotification(t('verify.qrSuccess'), 'success');
     } catch (error) {
-      setErrorMessage('Invalid QR code. Please try again.');
-      setVerificationStatus('error');
+      console.error('QR verification error:', error);
+      showNotification(t('verify.qrError'), 'error');
     }
   };
 
-  const startCamera = async () => {
+  const handleFaceVerification = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      setErrorMessage('Failed to access camera. Please check permissions.');
-      setVerificationStatus('error');
-    }
-  };
-
-  const performFacialRecognition = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    try {
-      const detections = await faceapi
-        .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceDescriptors();
-
-      if (detections.length === 0) {
-        throw new Error('No face detected');
+      const imageSrc = webcamRef.current?.getScreenshot();
+      if (!imageSrc) {
+        throw new Error('No image captured');
       }
 
-      // Here you would typically compare the face descriptor with the stored one
-      // For demo purposes, we'll just proceed
-      setVerificationStatus('success');
-      setActiveStep(2);
+      const response = await fetch('/api/verify/face', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imageData: imageSrc, voterId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Face verification failed');
+      }
+
+      showNotification(t('verify.faceSuccess'), 'success');
     } catch (error) {
-      setErrorMessage('Facial recognition failed. Please try again.');
-      setVerificationStatus('error');
-    }
-  };
-
-  const renderStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Scan your Voter ID QR Code
-            </Typography>
-            <Paper sx={{ p: 2, maxWidth: 400, mx: 'auto' }}>
-              <QrReader
-                value={qrData || ''}
-                onResult={(result) => handleQRScan(result.getText())}
-                style={{ width: '100%' }}
-              />
-            </Paper>
-          </Box>
-        );
-
-      case 1:
-        return (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Facial Recognition
-            </Typography>
-            <Paper sx={{ p: 2, maxWidth: 400, mx: 'auto' }}>
-              <video
-                ref={videoRef}
-                autoPlay
-                style={{ width: '100%', marginBottom: '1rem' }}
-              />
-              <canvas ref={canvasRef} style={{ display: 'none' }} />
-              <Button
-                variant="contained"
-                onClick={startCamera}
-                sx={{ mr: 2 }}
-              >
-                Start Camera
-              </Button>
-              <Button
-                variant="contained"
-                onClick={performFacialRecognition}
-                disabled={verificationStatus === 'pending'}
-              >
-                Verify Face
-              </Button>
-            </Paper>
-          </Box>
-        );
-
-      case 2:
-        return (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Verification Complete
-            </Typography>
-            <CircularProgress sx={{ color: 'success.main' }} />
-            <Typography sx={{ mt: 2 }}>
-              Your identity has been successfully verified.
-            </Typography>
-          </Box>
-        );
-
-      default:
-        return null;
+      console.error('Face verification error:', error);
+      showNotification(t('verify.faceError'), 'error');
     }
   };
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Voter Verification
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary" paragraph>
-          Please follow the steps to verify your identity using QR code and facial recognition.
-        </Typography>
-      </Box>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        {t('verify.title')}
+      </Typography>
 
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {steps.map((step) => (
-          <Step key={step.label}>
-            <StepLabel>
-              <Typography variant="subtitle2">{step.label}</Typography>
-            </StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+      <Card>
+        <CardContent>
+          <Paper sx={{ width: '100%' }}>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              indicatorColor="primary"
+              textColor="primary"
+              centered
+            >
+              <Tab label={t('verify.qrTab')} />
+              <Tab label={t('verify.faceTab')} />
+            </Tabs>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
+            <TabPanel value={tabValue} index={0}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label={t('verify.qrData')}
+                    value={qrData}
+                    onChange={(e) => setQrData(e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={handleQRVerification}
+                    disabled={!qrData}
+                  >
+                    {t('verify.verifyQR')}
+                  </Button>
+                </Grid>
+              </Grid>
+            </TabPanel>
 
-      {renderStepContent(activeStep)}
-    </Container>
+            <TabPanel value={tabValue} index={1}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label={t('verify.voterId')}
+                    value={voterId}
+                    onChange={(e) => setVoterId(e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                    <Webcam
+                      audio={false}
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      width={480}
+                      height={360}
+                    />
+                  </Box>
+                </Grid>
+                <Grid item xs={12}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={handleFaceVerification}
+                    disabled={!voterId}
+                  >
+                    {t('verify.verifyFace')}
+                  </Button>
+                </Grid>
+              </Grid>
+            </TabPanel>
+          </Paper>
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 

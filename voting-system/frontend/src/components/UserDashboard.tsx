@@ -5,58 +5,53 @@ import {
   Card,
   CardContent,
   Typography,
-  TextField,
-  Button,
-  Alert,
   Paper,
-  CircularProgress,
   useTheme,
+  CircularProgress,
+  Button,
 } from '@mui/material';
 import {
-  QrCode as QrCodeIcon,
   Queue as QueueIcon,
-  Timer as TimerIcon,
+  QrCode as QrCodeIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
+import { QRCodeSVG } from 'qrcode.react';
 
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  transition: 'all 0.3s ease-in-out',
+  transition: 'transform 0.2s ease-in-out',
   '&:hover': {
     transform: 'translateY(-4px)',
-    boxShadow: theme.shadows[8],
   },
 }));
 
-const QRCodeContainer = styled(Box)(({ theme }) => ({
+const IconWrapper = styled(Box)(({ theme }) => ({
   display: 'flex',
-  flexDirection: 'column',
   alignItems: 'center',
-  padding: theme.spacing(2),
-  backgroundColor: theme.palette.grey[100],
-  borderRadius: theme.shape.borderRadius,
-  marginTop: theme.spacing(2),
+  justifyContent: 'center',
+  width: '48px',
+  height: '48px',
+  borderRadius: '50%',
+  backgroundColor: theme.palette.primary.main,
+  color: 'white',
+  marginBottom: theme.spacing(2),
 }));
+
+interface Queue {
+  room_number: number;
+  current_queue: number;
+  estimated_wait_time: number;
+}
 
 const UserDashboard = () => {
   const theme = useTheme();
-  const [voterId, setVoterId] = useState('');
+  const [queues, setQueues] = useState<Queue[]>([]);
+  const [loading, setLoading] = useState(true);
   const [qrCode, setQrCode] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [queues, setQueues] = useState<any[]>([]);
-
-  const fetchQueues = async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/queues`);
-      setQueues(response.data);
-    } catch (err: any) {
-      setError('Failed to fetch queue data');
-    }
-  };
 
   useEffect(() => {
     fetchQueues();
@@ -64,119 +59,134 @@ const UserDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleGenerateQR = async () => {
-    if (!voterId) {
-      setError('Please enter your Voter ID');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
+  const fetchQueues = async () => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/voters/qr`,
-        { voterId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-      setQrCode(response.data.qrCode);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to generate QR code');
+      const response = await axios.get('http://localhost:3001/api/queues');
+      setQueues(response.data);
+    } catch (error) {
+      console.error('Error fetching queues:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGenerateQR = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please log in to generate QR codes');
+        return;
+      }
+
+      const response = await axios.post(
+        'http://localhost:3001/api/qr/generate',
+        {
+          voterId: 'USER_' + Date.now(), // Generate a unique ID
+          roomNumber: '1', // Default room
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setQrCode(response.data.qrCode);
+      setError('');
+    } catch (err) {
+      setError('Failed to generate QR code. Please try again.');
+      console.error('Error generating QR code:', err);
+    }
+  };
+
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Voter Dashboard
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Voter Dashboard
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          View queue status and generate your QR code
+        </Typography>
+      </Box>
 
       <Grid container spacing={3}>
+        {/* Queue Status Section */}
         <Grid item xs={12} md={6}>
           <StyledCard>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Generate QR Code
-              </Typography>
-              <TextField
-                fullWidth
-                label="Voter ID"
-                value={voterId}
-                onChange={(e) => setVoterId(e.target.value)}
-                disabled={loading}
-                sx={{ mb: 2 }}
-              />
-              {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              )}
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={handleGenerateQR}
-                disabled={loading}
-                startIcon={loading ? <CircularProgress size={20} /> : <QrCodeIcon />}
-              >
-                Generate QR Code
-              </Button>
-              {qrCode && (
-                <QRCodeContainer>
-                  <img
-                    src={qrCode}
-                    alt="Voter QR Code"
-                    style={{ maxWidth: '200px', marginBottom: '16px' }}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    Show this QR code to the polling officer
-                  </Typography>
-                </QRCodeContainer>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <IconWrapper>
+                  <QueueIcon />
+                </IconWrapper>
+                <Typography variant="h6" component="div" sx={{ ml: 2 }}>
+                  Real-time Queue Status
+                </Typography>
+              </Box>
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <Box>
+                  {queues.map((queue) => (
+                    <Paper key={queue.room_number} sx={{ p: 2, mb: 2 }}>
+                      <Typography variant="h6">
+                        Room {queue.room_number}
+                      </Typography>
+                      <Typography>
+                        Current Queue: {queue.current_queue}
+                      </Typography>
+                      <Typography>
+                        Estimated Wait Time: {queue.estimated_wait_time} minutes
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Box>
               )}
             </CardContent>
           </StyledCard>
         </Grid>
 
+        {/* QR Code Generation Section */}
         <Grid item xs={12} md={6}>
           <StyledCard>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Queue Status
-              </Typography>
-              <Grid container spacing={2}>
-                {queues.map((queue) => (
-                  <Grid item xs={12} key={queue.room_number}>
-                    <Paper
-                      sx={{
-                        p: 2,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="subtitle1">
-                          Room {queue.room_number}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Current Queue: {queue.current_queue}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <TimerIcon color="action" />
-                        <Typography variant="body2">
-                          {queue.estimated_wait_time} min
-                        </Typography>
-                      </Box>
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <IconWrapper>
+                  <QrCodeIcon />
+                </IconWrapper>
+                <Typography variant="h6" component="div" sx={{ ml: 2 }}>
+                  Your QR Code
+                </Typography>
+              </Box>
+              {error && (
+                <Typography color="error" sx={{ mb: 2 }}>
+                  {error}
+                </Typography>
+              )}
+              {qrCode ? (
+                <Box sx={{ textAlign: 'center' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                    <QRCodeSVG value={qrCode} size={256} />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Show this QR code to the queue manager when your turn comes
+                  </Typography>
+                </Box>
+              ) : (
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Generate your QR code to join the queue
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={handleGenerateQR}
+                    sx={{ mt: 2 }}
+                  >
+                    Generate QR Code
+                  </Button>
+                </Box>
+              )}
             </CardContent>
           </StyledCard>
         </Grid>

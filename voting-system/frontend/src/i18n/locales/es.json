@@ -1,0 +1,117 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "search": "Buscar",
+    "noResults": "No se encontraron resultados"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "rememberMe": "Recordarme",
+    "loginButton": "Iniciar Sesión",
+    "registerButton": "Registrarse",
+    "invalidCredentials": "Correo o contraseña inválidos",
+    "setup2FA": "Configurar Autenticación de Dos Factores",
+    "verify2FA": "Verificar Autenticación de Dos Factores",
+    "setup2FADescription": "Escanea el código QR con tu aplicación autenticadora o ingresa el código de respaldo manualmente.",
+    "scanQRCode": "Escanea este código QR con tu aplicación autenticadora",
+    "backupCode": "Código de Respaldo",
+    "enterVerificationCode": "Ingresa el código de verificación de tu aplicación autenticadora",
+    "verificationCode": "Código de Verificación",
+    "enable2FA": "Activar 2FA",
+    "disable2FA": "Desactivar 2FA",
+    "verify": "Verificar",
+    "invalidCode": "Código de verificación inválido",
+    "verificationError": "Error al verificar el código",
+    "disableError": "Error al desactivar 2FA",
+    "2faEnabled": "Autenticación de dos factores activada exitosamente",
+    "2faDisabled": "Autenticación de dos factores desactivada exitosamente",
+    "2faVerified": "Autenticación de dos factores verificada exitosamente",
+    "2faEnableError": "Error al activar la autenticación de dos factores",
+    "2faDisableError": "Error al desactivar la autenticación de dos factores",
+    "2faVerificationError": "Error al verificar la autenticación de dos factores"
+  },
+  "queue": {
+    "title": "Gestión de Colas",
+    "roomNumber": "Número de Sala",
+    "currentQueue": "Cola Actual",
+    "estimatedWaitTime": "Tiempo de Espera Estimado",
+    "totalVoters": "Total de Votantes",
+    "processedVoters": "Votantes Procesados",
+    "updateQueue": "Actualizar Cola",
+    "refresh": "Actualizar",
+    "noQueues": "No hay colas activas"
+  },
+  "voter": {
+    "title": "Gestión de Votantes",
+    "search": "Buscar Votantes",
+    "voterId": "ID de Votante",
+    "name": "Nombre",
+    "status": "Estado",
+    "registrationDate": "Fecha de Registro",
+    "verificationMethod": "Método de Verificación",
+    "verify": "Verificar Votante",
+    "generateQR": "Generar Código QR",
+    "scanQR": "Escanear Código QR"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "overview": "Resumen",
+    "statistics": "Estadísticas",
+    "recentActivity": "Actividad Reciente",
+    "queueStats": "Estadísticas de Colas",
+    "voterStats": "Estadísticas de Votantes"
+  },
+  "settings": {
+    "title": "Configuración de Usuario",
+    "account": "Información de la Cuenta",
+    "email": "Correo Electrónico",
+    "role": "Rol",
+    "roles": {
+      "admin": "Administrador",
+      "staff": "Miembro del Personal",
+      "voter": "Votante"
+    },
+    "security": "Configuración de Seguridad",
+    "twoFactorAuth": "Autenticación de Dos Factores",
+    "twoFactorAuthDescription": "Agrega una capa adicional de seguridad a tu cuenta",
+    "changePassword": "Cambiar Contraseña",
+    "changePasswordDescription": "Actualiza la contraseña de tu cuenta",
+    "change": "Cambiar",
+    "preferences": "Preferencias",
+    "darkMode": "Modo Oscuro",
+    "darkModeDescription": "Alternar entre tema claro/oscuro",
+    "language": "Idioma",
+    "languageDescription": "Cambiar el idioma de la aplicación"
+  },
+  "notifications": {
+    "queueUpdate": "Cola actualizada",
+    "voterVerified": "Votante verificado exitosamente",
+    "error": "Ocurrió un error",
+    "connectionLost": "Conexión perdida",
+    "connectionRestored": "Conexión restaurada"
+  },
+  "app": {
+    "name": "Sistema de Votación",
+    "title": "Sistema de Votación"
+  },
+  "nav": {
+    "dashboard": "Panel de Control",
+    "queue": "Gestión de Colas",
+    "verify": "Verificación de Votantes",
+    "qrGenerate": "Generar Código QR",
+    "qrScan": "Escanear Código QR",
+    "settings": "Configuración"
+  }
+} 
